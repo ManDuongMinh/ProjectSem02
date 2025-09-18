@@ -9,21 +9,18 @@ class Account extends Model
 {
     use HasFactory;
 
-    protected $table = 'accounts'; // ✅ bảng chính xác trong DB
+    public $timestamps = false;
+    protected $table = 'accounts';
     protected $primaryKey = 'AccountID';
-    public $incrementing = false; // vì AccountID là varchar, không auto-increment
+    public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
         'AccountID',
         'AName',
         'Email',
-        'Pass',
+        'Pass',     // ⚡ thêm để tránh lỗi MassAssignment
         'ARole',
-        'AStatus',
-    ];
-
-    protected $hidden = [
-        'Pass',
+        'AStatus'
     ];
 }

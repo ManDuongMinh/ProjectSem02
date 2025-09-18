@@ -1,46 +1,47 @@
-import "../../css/UserManagement.css";
+import "../../css/UserManagement.css"; // dùng lại CSS container, table, btn...
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-export default function UserManagement() {
-  const [accounts, setAccounts] = useState([]);
+export default function CourseManagement() {
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
-  const [roleMap, setRoleMap] = useState({});
+  const [statusMap, setStatusMap] = useState({});
 
   useEffect(() => {
-    fetchAccounts();
+    fetchCourses();
   }, []);
 
-  const fetchAccounts = async () => {
+  const fetchCourses = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/users");
-      setAccounts(res.data);
+      const res = await axios.get("http://127.0.0.1:8000/api/courses");
+      setCourses(res.data);
 
+      // map trạng thái
       const map = {};
-      res.data.forEach((a) => {
-        map[a.AccountID] = a.ARole || "Learner";
+      res.data.forEach((c) => {
+        map[c.CourseID] = c.CStatus || "Inactive";
       });
-      setRoleMap(map);
+      setStatusMap(map);
     } catch (err) {
-      console.error("Error fetching accounts:", err);
+      console.error("Error fetching courses:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleRoleChange = (id, value) => {
-    setRoleMap((prev) => ({ ...prev, [id]: value }));
+  const handleStatusChange = (id, value) => {
+    setStatusMap((prev) => ({ ...prev, [id]: value }));
   };
 
   const handleSave = async (id) => {
-    const newRole = roleMap[id];
-    const oldRole = accounts.find((a) => a.AccountID === id).ARole;
+    const newStatus = statusMap[id];
+    const oldStatus = courses.find((c) => c.CourseID === id).CStatus;
 
-    if (newRole === oldRole) {
+    if (newStatus === oldStatus) {
       setMessage("No changes to save.");
       setTimeout(() => setMessage(""), 2500);
       return;
@@ -48,21 +49,26 @@ export default function UserManagement() {
 
     if (
       !window.confirm(
-        `Are you sure you want to change the role of account ${id} from ${oldRole} to ${newRole}?`
+        `Change course ${id} status from ${oldStatus} to ${newStatus}?`
       )
     ) {
-      setRoleMap((prev) => ({ ...prev, [id]: oldRole }));
+      setStatusMap((prev) => ({ ...prev, [id]: oldStatus }));
       return;
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/users/${id}`, { ARole: newRole });
-      setAccounts((prev) =>
-        prev.map((a) => (a.AccountID === id ? { ...a, ARole: newRole } : a))
+      await axios.put(`http://127.0.0.1:8000/api/courses/${id}`, {
+        CStatus: newStatus,
+      });
+
+      setCourses((prev) =>
+        prev.map((c) =>
+          c.CourseID === id ? { ...c, CStatus: newStatus } : c
+        )
       );
-      setMessage("Account updated successfully!");
+      setMessage("Course updated successfully!");
     } catch (err) {
-      console.error("Error updating account:", err);
+      console.error("Error updating course:", err);
       setMessage("Update failed.");
     } finally {
       setTimeout(() => setMessage(""), 2500);
@@ -70,13 +76,13 @@ export default function UserManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this account?")) return;
+    if (!window.confirm("Are you sure you want to delete this course?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/users/${id}`);
-      setAccounts((prev) => prev.filter((a) => a.AccountID !== id));
-      setMessage("Account deleted successfully!");
+      await axios.delete(`http://127.0.0.1:8000/api/courses/${id}`);
+      setCourses((prev) => prev.filter((c) => c.CourseID !== id));
+      setMessage("Course deleted successfully!");
     } catch (err) {
-      console.error("Error deleting account:", err);
+      console.error("Error deleting course:", err);
       setMessage("Delete failed.");
     } finally {
       setTimeout(() => setMessage(""), 2500);
@@ -85,52 +91,59 @@ export default function UserManagement() {
 
   const indexOfLast = currentPage * rowsPerPage;
   const indexOfFirst = indexOfLast - rowsPerPage;
-  const currentAccounts = accounts.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(accounts.length / rowsPerPage);
+  const currentCourses = courses.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(courses.length / rowsPerPage);
 
-  if (loading) return <p style={{ textAlign: "center" }}>Loading accounts...</p>;
+  if (loading) return <p style={{ textAlign: "center" }}>Loading courses...</p>;
 
   return (
     <div className="container">
-      <h1>Admin • User Management</h1>
+      <h1>Admin • Course Management</h1>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
         <thead>
           <tr>
-            <th>Full Name</th>
-            <th>Email</th>
-            <th>Role</th>
+            <th>Course ID</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Start Date</th>
+            <th>Creator</th>
+            <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {currentAccounts.map((a) => (
-            <tr key={a.AccountID}>
-              <td>{a.AName}</td>
-              <td>{a.Email}</td>
+          {currentCourses.map((c) => (
+            <tr key={c.CourseID}>
+              <td>{c.CourseID}</td>
+              <td>{c.CName}</td>
+              <td>{c.CDescription}</td>
+              <td>{c.StartDate}</td>
+              <td>{c.CreatorID}</td>
               <td>
                 <select
-                  value={roleMap[a.AccountID] || "Learner"}
-                  onChange={(e) => handleRoleChange(a.AccountID, e.target.value)}
+                  value={statusMap[c.CourseID] || "Inactive"}
+                  onChange={(e) =>
+                    handleStatusChange(c.CourseID, e.target.value)
+                  }
                 >
-                  <option>Admin</option>
-                  <option>Instructor</option>
-                  <option>Learner</option>
+                  <option>Active</option>
+                  <option>Inactive</option>
                 </select>
               </td>
               <td>
                 <div className="action-buttons">
                   <button
                     className="btn btn-save"
-                    onClick={() => handleSave(a.AccountID)}
-                    disabled={roleMap[a.AccountID] === a.ARole}
+                    onClick={() => handleSave(c.CourseID)}
+                    disabled={statusMap[c.CourseID] === c.CStatus}
                   >
                     Save
                   </button>
                   <button
                     className="btn btn-del"
-                    onClick={() => handleDelete(a.AccountID)}
+                    onClick={() => handleDelete(c.CourseID)}
                   >
                     Delete
                   </button>
@@ -170,13 +183,10 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Links */}
+      {/* Back */}
       <div className="row">
         <Link to="/" className="btn-ghost">
           Back to Dashboard
-        </Link>
-        <Link to="/admin/courses" className="btn-ghost">
-          Go to Course Management
         </Link>
       </div>
     </div>

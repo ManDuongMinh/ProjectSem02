@@ -3,25 +3,25 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Account;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        return Account::all();
+    public function index() {
+        $users = DB::table('accounts')->get();
+        return response()->json($users);
     }
 
-    public function update(Request $request, $id)
-    {
-        $user = Account::findOrFail($id);
-        $user->update($request->only(['AName', 'Email', 'ARole', 'AStatus']));
-        return response()->json(['message' => 'Updated', 'user' => $user]);
+    public function update(Request $request, $id) {
+        DB::table('accounts')
+            ->where('AccountID', $id)
+            ->update(['ARole' => $request->ARole]);
+        return response()->json(['message' => 'User updated']);
     }
 
-    public function destroy($id)
-    {
-        Account::destroy($id);
-        return response()->json(['message' => 'Deleted']);
+    public function destroy($id) {
+        DB::table('accounts')->where('AccountID', $id)->delete();
+        return response()->json(['message' => 'User deleted']);
     }
 }
+

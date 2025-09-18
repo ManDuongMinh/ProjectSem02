@@ -1,0 +1,157 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap");
+
+:root {
+  --bg: #0b1220;
+  --bg2: #0f172a;
+  --text: #e8eefc;
+  --muted: #9db0d1;
+  --primary: #5b8cfe;
+  --primary-600: #3d73ff;
+  --ring: #83a2ff;
+  --ok: #21c38b;
+  --danger: #ff6b6b;
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--text);
+  background: linear-gradient(160deg, var(--bg), var(--bg2));
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1600px;
+  min-height: 70vh; /* cao hơn */
+  background: linear-gradient(180deg, #0e1731ee, #0a122bfa);
+  border: 1px solid #25335f;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 28px;
+  overflow-x: auto; /* scroll ngang nếu bảng dài */
+}
+
+h1 {
+  text-align: center;
+  margin: 0 0 20px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  table-layout: auto;
+}
+
+th,
+td {
+  padding: 14px 12px;
+  text-align: left;
+  word-break: break-word;
+  white-space: normal;
+  font-size: 1rem;
+}
+
+th {
+  background: #1a2540;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+tr:nth-child(even) {
+  background: #0c1836;
+}
+
+th:nth-child(3),
+td:nth-child(3) {
+  width: 160px; /* Role */
+}
+
+th:last-child,
+td:last-child {
+  width: 200px; /* Action */
+  text-align: center;
+}
+
+select {
+  background: #0b1533;
+  color: var(--text);
+  border: 1px solid #2a3860;
+  border-radius: 6px;
+  padding: 6px 10px;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  border: 0;
+  font-size: 0.9rem;
+  min-width: 75px; /* tránh chữ xuống dòng */
+  transition: 0.2s;
+}
+
+.btn-save {
+  background: var(--ok);
+  color: white;
+}
+.btn-save:hover {
+  filter: brightness(1.1);
+}
+
+.btn-del {
+  background: var(--danger);
+  color: white;
+}
+.btn-del:hover {
+  filter: brightness(1.1);
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid #2a3655;
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  min-width: 40px;
+  text-align: center;
+  transition: 0.2s;
+}
+
+.btn-ghost:hover {
+  background: #1a2540;
+}
+
+.btn-ghost.active {
+  background: var(--primary-600);
+  color: white;
+  border-color: var(--primary-600);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}

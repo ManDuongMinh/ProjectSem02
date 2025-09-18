@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -7,98 +8,86 @@ export default function Login() {
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
   const navigate = useNavigate();
-
-  const API_URL = import.meta.env.VITE_API_URL; // ví dụ: http://127.0.0.1:8000/api
-
-  // Lấy email lưu sẵn
-  useEffect(() => {
-    const saved = localStorage.getItem("elms-email");
-    if (saved) {
-      setEmail(saved);
-      setRemember(true);
-    }
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    // validate cơ bản
-    if (!/^\S+@\S+\.\S+$/.test(email) || pwd.length < 6) {
-      setError("Please enter a valid email and password (≥ 6).");
-      return;
-    }
-
-    if (remember) localStorage.setItem("elms-email", email);
-    else localStorage.removeItem("elms-email");
-
     try {
-      const res = await fetch(`${API_URL}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password: pwd }),
+      const res = await axios.post("http://127.0.0.1:8000/api/login", {
+        email,
+        password: pwd,
       });
 
-      const data = await res.json();
+      // API Laravel trả về user + token
+      const user = res.data.user;
+      const token = res.data.token;
 
-      if (!res.ok) throw new Error(data.message || "Invalid credentials");
+      if (!user) {
+        setError("Invalid login information.");
+        return;
+      }
 
-      if (data.user) {
-        // ✅ lưu user vào localStorage
-        localStorage.setItem("user", JSON.stringify(data.user));
+      // lưu token vào localStorage
+      if (remember) {
+        localStorage.setItem("token", token);
+      }
 
-        setSuccess("Login successful! Redirecting…");
+      localStorage.setItem("user", JSON.stringify(user));
+      setSuccess("Login successful!");
 
-        // ✅ điều hướng theo role
-        setTimeout(() => {
-          if (data.user.ARole === "Admin") navigate("/admin/users");
-          else if (data.user.ARole === "Instructor") navigate("/teacher");
-          else navigate("/student");
-        }, 1000);
+      // điều hướng theo role
+      if (user.ARole === "Admin") {
+        navigate("/admin/users");
+      } else if (user.ARole === "Instructor") {
+        navigate("/instructor/dashboard");
       } else {
-        setError("Account not found. Please register first.");
+        navigate("/learner/dashboard");
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Login failed.");
     }
   };
 
   return (
-    <div className="register-wrapper">
+    <div className="login-wrapper">
       <div className="card">
-        <h1>Sign in</h1>
+        <h1>Login</h1>
         <form onSubmit={handleLogin}>
           <div>
             <label>Email</label>
             <input
-              className="input"
               type="email"
+              className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
             />
           </div>
+
           <div>
             <label>Password</label>
             <input
-              className="input"
               type="password"
+              className="input"
               value={pwd}
               onChange={(e) => setPwd(e.target.value)}
               placeholder="••••••••"
               required
             />
           </div>
-          <div>
+
+          <div className="row">
             <label>
               <input
                 type="checkbox"
                 checked={remember}
-                onChange={() => setRemember(!remember)}
-              />{" "}
+                onChange={(e) => setRemember(e.target.checked)}
+              />
               Remember me
             </label>
           </div>
@@ -107,7 +96,7 @@ export default function Login() {
           {success && <p className="success">{success}</p>}
 
           <button type="submit" className="btn btn-primary">
-            Continue
+            Login
           </button>
         </form>
 
