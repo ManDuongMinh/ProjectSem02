@@ -7,27 +7,75 @@ use Illuminate\Support\Facades\DB;
 
 class CourseController extends Controller
 {
-    // Lấy tất cả courses
     public function index()
     {
         $courses = DB::table('courses')->get();
         return response()->json($courses);
     }
 
-    // Cập nhật trạng thái course
-    public function update(Request $request, $id)
-    {
-        DB::table('courses')
-            ->where('CourseID', $id)
-            ->update(['CStatus' => $request->CStatus]);
+   public function store(Request $request)
+{
+    $validated = $request->validate([
+        'CName' => 'required|string|max:255',
+        'CDescription' => 'nullable|string',
+    ]);
 
-        return response()->json(['message' => 'Course updated successfully']);
+    // Lấy CourseID cuối cùng có prefix ADM
+    $last = DB::table('courses')
+        ->where('CourseID', 'like', 'ADM%')
+        ->orderBy('CourseID', 'desc')
+        ->first();
+
+    if ($last) {
+        // Lấy phần số phía sau ADM, tăng lên 1
+        $num = intval(substr($last->CourseID, 3)) + 1;
+        $newId = 'ADM' . str_pad($num, 5, '0', STR_PAD_LEFT);
+    } else {
+        $newId = 'ADM00001';
     }
 
-    // Xóa course
+    DB::table('courses')->insert([
+        'CourseID'     => $newId,
+        'CName'        => $validated['CName'],
+        'CDescription' => $validated['CDescription'] ?? '',
+        'StartDate'    => now(),
+        'CStatus'      => 'Inactive',
+        'CreatorID'    => 'INS003', // sau này thay bằng user login
+    ]);
+
+    return response()->json([
+        'message'  => 'Course added successfully',
+        'CourseID' => $newId
+    ]);
+}
+
+
+
+public function update(Request $request, $id)
+{
+    $validated = $request->validate([
+        'CName' => 'required|string|max:255',
+        'CDescription' => 'nullable|string',
+    ]);
+
+    $affected = DB::table('courses')
+        ->where('CourseID', $id)
+        ->update($validated);
+
+    if ($affected) {
+        return response()->json(['message' => 'Course updated successfully']);
+    }
+    return response()->json(['message' => 'Course not found or unchanged'], 404);
+}
+
+
     public function destroy($id)
     {
-        DB::table('courses')->where('CourseID', $id)->delete();
-        return response()->json(['message' => 'Course deleted successfully']);
+        $deleted = DB::table('courses')->where('CourseID', $id)->delete();
+
+        if ($deleted) {
+            return response()->json(['message' => 'Course deleted successfully']);
+        }
+        return response()->json(['message' => 'Course not found'], 404);
     }
 }

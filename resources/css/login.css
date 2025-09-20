@@ -1,0 +1,108 @@
+/* Toàn bộ trang login */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #111827; /* nền tối */
+  font-family: 'Inter', sans-serif;
+}
+
+/* Card login */
+.login-card {
+  background: #1f2937;
+  padding: 40px 35px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  width: 380px;
+  text-align: center;
+  color: #f9fafb;
+}
+
+/* Tiêu đề */
+.login-title {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #f9fafb;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 24px;
+}
+
+/* Thông báo lỗi */
+.login-message {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+/* Nhóm input */
+.form-group {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #d1d5db;
+}
+
+/* Ô nhập */
+.form-input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  background: #111827;
+  color: #f9fafb;
+  font-size: 14px;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59,130,246,0.4);
+}
+
+/* Nút login */
+.login-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  font-size: 16px;
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Link phụ */
+.login-links {
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.login-links a {
+  color: #3b82f6;
+  text-decoration: none;
+  margin: 0 4px;
+}
+
+.login-links a:hover {
+  text-decoration: underline;
+}

@@ -1,107 +1,81 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import "../../css/login.css"; // Đường dẫn tuỳ thư mục bạn
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [pwd, setPwd] = useState("");
-  const [remember, setRemember] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
-
     try {
       const res = await axios.post("http://127.0.0.1:8000/api/login", {
         email,
-        password: pwd,
+        password,
       });
 
-      // API Laravel trả về user + token
-      const user = res.data.user;
-      const token = res.data.token;
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-      if (!user) {
-        setError("Invalid login information.");
-        return;
-      }
-
-      // lưu token vào localStorage
-      if (remember) {
-        localStorage.setItem("token", token);
-      }
-
-      localStorage.setItem("user", JSON.stringify(user));
-      setSuccess("Login successful!");
-
-      // điều hướng theo role
-      if (user.ARole === "Admin") {
-        navigate("/admin/users");
-      } else if (user.ARole === "Instructor") {
-        navigate("/instructor/dashboard");
+      if (res.data.user.ARole === "Admin") {
+        navigate("/admin");
       } else {
-        navigate("/learner/dashboard");
+        setMessage("❌ You are not authorized to access Admin area!");
+        navigate("/");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed.");
+      console.error(err);
+      setMessage("❌ Login failed! Please check your email and password.");
     }
   };
 
   return (
-    <div className="login-wrapper">
-      <div className="card">
-        <h1>Login</h1>
-        <form onSubmit={handleLogin}>
-          <div>
-            <label>Email</label>
+    <div className="login-container">
+      <div className="login-card">
+        {/* Logo / Title */}
+        <h1 className="login-title">E-Learning Admin Login</h1>
+        <p className="login-subtitle">Sign in to manage courses and users</p>
+
+        {/* Error message */}
+        {message && <p className="login-message">{message}</p>}
+
+        {/* Form */}
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group">
+            <label>Email Address</label>
             <input
               type="email"
-              className="input"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
               required
+              className="form-input"
             />
           </div>
-
-          <div>
+          <div className="form-group">
             <label>Password</label>
             <input
               type="password"
-              className="input"
-              value={pwd}
-              onChange={(e) => setPwd(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
+              className="form-input"
             />
           </div>
 
-          <div className="row">
-            <label>
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              Remember me
-            </label>
-          </div>
-
-          {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}
-
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="btn btn-primary login-btn">
             Login
           </button>
         </form>
 
-        <div className="footer">
-          Don’t have an account? <Link to="/register">Register</Link>
+        {/* Extra links */}
+        <div className="login-links">
+          <a href="/register">Create an account</a> | 
+          <a href="/forgot-password"> Forgot password?</a>
         </div>
       </div>
     </div>

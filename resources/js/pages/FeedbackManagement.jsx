@@ -1,10 +1,11 @@
-import "../../css/UserManagement.css"; // dùng lại CSS container, table, btn...
+// src/pages/FeedbackManagement.jsx
+import "../../css/UserManagement.css"; // dùng lại CSS table, btn
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-export default function CourseManagement() {
-  const [courses, setCourses] = useState([]);
+export default function FeedbackManagement() {
+  const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,22 +13,21 @@ export default function CourseManagement() {
   const [statusMap, setStatusMap] = useState({});
 
   useEffect(() => {
-    fetchCourses();
+    fetchFeedbacks();
   }, []);
 
-  const fetchCourses = async () => {
+  const fetchFeedbacks = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/courses");
-      setCourses(res.data);
+      const res = await axios.get("http://127.0.0.1:8000/api/feedback");
+      setFeedbacks(res.data);
 
-      // map trạng thái
       const map = {};
-      res.data.forEach((c) => {
-        map[c.CourseID] = c.CStatus || "Inactive";
+      res.data.forEach((f) => {
+        map[f.FeedbackID] = f.FStatus || "Waiting";
       });
       setStatusMap(map);
     } catch (err) {
-      console.error("Error fetching courses:", err);
+      console.error("Error fetching feedback:", err);
     } finally {
       setLoading(false);
     }
@@ -39,7 +39,7 @@ export default function CourseManagement() {
 
   const handleSave = async (id) => {
     const newStatus = statusMap[id];
-    const oldStatus = courses.find((c) => c.CourseID === id).CStatus;
+    const oldStatus = feedbacks.find((f) => f.FeedbackID === id).FStatus;
 
     if (newStatus === oldStatus) {
       setMessage("No changes to save.");
@@ -47,28 +47,22 @@ export default function CourseManagement() {
       return;
     }
 
-    if (
-      !window.confirm(
-        `Change course ${id} status from ${oldStatus} to ${newStatus}?`
-      )
-    ) {
+    if (!window.confirm(`Change feedback ${id} status from ${oldStatus} to ${newStatus}?`)) {
       setStatusMap((prev) => ({ ...prev, [id]: oldStatus }));
       return;
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/courses/${id}`, {
-        CStatus: newStatus,
+      await axios.put(`http://127.0.0.1:8000/api/feedback/${id}`, {
+        FStatus: newStatus,
       });
 
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.CourseID === id ? { ...c, CStatus: newStatus } : c
-        )
+      setFeedbacks((prev) =>
+        prev.map((f) => (f.FeedbackID === id ? { ...f, FStatus: newStatus } : f))
       );
-      setMessage("Course updated successfully!");
+      setMessage("Feedback updated successfully!");
     } catch (err) {
-      console.error("Error updating course:", err);
+      console.error("Error updating feedback:", err);
       setMessage("Update failed.");
     } finally {
       setTimeout(() => setMessage(""), 2500);
@@ -76,13 +70,13 @@ export default function CourseManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    if (!window.confirm("Are you sure you want to delete this feedback?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/courses/${id}`);
-      setCourses((prev) => prev.filter((c) => c.CourseID !== id));
-      setMessage("Course deleted successfully!");
+      await axios.delete(`http://127.0.0.1:8000/api/feedback/${id}`);
+      setFeedbacks((prev) => prev.filter((f) => f.FeedbackID !== id));
+      setMessage("Feedback deleted successfully!");
     } catch (err) {
-      console.error("Error deleting course:", err);
+      console.error("Error deleting feedback:", err);
       setMessage("Delete failed.");
     } finally {
       setTimeout(() => setMessage(""), 2500);
@@ -91,62 +85,55 @@ export default function CourseManagement() {
 
   const indexOfLast = currentPage * rowsPerPage;
   const indexOfFirst = indexOfLast - rowsPerPage;
-  const currentCourses = courses.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(courses.length / rowsPerPage);
+  const currentFeedbacks = feedbacks.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(feedbacks.length / rowsPerPage);
 
-  if (loading) return <p style={{ textAlign: "center" }}>Loading courses...</p>;
+  if (loading) return <p style={{ textAlign: "center" }}>Loading feedback...</p>;
 
   return (
     <div className="container">
-      <h1>Admin • Course Management</h1>
-      <Link to="/admin/courses/new" className="btn btn-primary">
-        Add New Course
-      </Link>
+      <h1>Admin • Feedback Management</h1>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
         <thead>
           <tr>
-            <th>Course ID</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Start Date</th>
-            <th>Creator</th>
+            <th>Feedback ID</th>
+            <th>Account ID</th>
+            <th>Content</th>
+            <th>Created At</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {currentCourses.map((c) => (
-            <tr key={c.CourseID}>
-              <td>{c.CourseID}</td>
-              <td>{c.CName}</td>
-              <td>{c.CDescription}</td>
-              <td>{c.StartDate}</td>
-              <td>{c.CreatorID}</td>
+          {currentFeedbacks.map((f) => (
+            <tr key={f.FeedbackID}>
+              <td>{f.FeedbackID}</td>
+              <td>{f.AccountID}</td>
+              <td>{f.Content}</td>
+              <td>{f.CreatedAt}</td>
               <td>
                 <select
-                  value={statusMap[c.CourseID] || "Inactive"}
-                  onChange={(e) =>
-                    handleStatusChange(c.CourseID, e.target.value)
-                  }
+                  value={statusMap[f.FeedbackID] || "Waiting"}
+                  onChange={(e) => handleStatusChange(f.FeedbackID, e.target.value)}
                 >
-                  <option>Active</option>
-                  <option>Inactive</option>
+                  <option>Processed</option>
+                  <option>Waiting</option>
                 </select>
               </td>
               <td>
                 <div className="action-buttons">
                   <button
                     className="btn btn-save"
-                    onClick={() => handleSave(c.CourseID)}
-                    disabled={statusMap[c.CourseID] === c.CStatus}
+                    onClick={() => handleSave(f.FeedbackID)}
+                    disabled={statusMap[f.FeedbackID] === f.FStatus}
                   >
                     Save
                   </button>
                   <button
                     className="btn btn-del"
-                    onClick={() => handleDelete(c.CourseID)}
+                    onClick={() => handleDelete(f.FeedbackID)}
                   >
                     Delete
                   </button>
@@ -188,19 +175,19 @@ export default function CourseManagement() {
 
       {/* Back */}
       <div className="row">
-        <Link to="/admin" className="btn-ghost">
-          Back to HomePage
-        </Link>
-        <Link to="/admin/users" className="btn-ghost">
-          Go to User Management
-        </Link>
-
-        <Link to="/admin/reports" className="btn-ghost">
-          Go to Report Management
-        </Link>
-        <Link to="/admin/feedback" className="btn-ghost">
-          Go to Feedback Management
-        </Link>
+       <Link to="/admin" className="btn-ghost">
+           Back to HomePage
+         </Link>
+         <Link to="/admin/users" className="btn-ghost">
+           Go to User Management
+         </Link>
+         <Link to="/admin/courses" className="btn-ghost">
+           Go to Course Management
+         </Link>
+         <Link to="/admin/reports" className="btn-ghost">
+           Go to Report Management
+         </Link>
+         
       </div>
     </div>
   );

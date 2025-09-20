@@ -1,7 +1,7 @@
 import "../../css/UserManagement.css";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function UserManagement() {
   const [accounts, setAccounts] = useState([]);
@@ -10,6 +10,7 @@ export default function UserManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [roleMap, setRoleMap] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAccounts();
@@ -17,7 +18,9 @@ export default function UserManagement() {
 
   const fetchAccounts = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/users");
+      const res = await axios.get("http://127.0.0.1:8000/api/users", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
       setAccounts(res.data);
 
       const map = {};
@@ -29,6 +32,20 @@ export default function UserManagement() {
       console.error("Error fetching accounts:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/logout", {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
     }
   };
 
@@ -92,7 +109,10 @@ export default function UserManagement() {
 
   return (
     <div className="container">
-      <h1>Admin • User Management</h1>
+      <div className="row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Admin • User Management</h1>
+        <button onClick={handleLogout} className="btn-ghost">Logout</button>
+      </div>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
@@ -172,12 +192,10 @@ export default function UserManagement() {
 
       {/* Links */}
       <div className="row">
-        <Link to="/" className="btn-ghost">
-          Back to Dashboard
-        </Link>
-        <Link to="/admin/courses" className="btn-ghost">
-          Go to Course Management
-        </Link>
+        <Link to="/admin" className="btn-ghost">Back to HomePage</Link>
+        <Link to="/admin/courses" className="btn-ghost">Go to Course Management</Link>
+        <Link to="/admin/reports" className="btn-ghost">Go to Report Management</Link>
+        <Link to="/admin/feedback" className="btn-ghost">Go to Feedback Management</Link>
       </div>
     </div>
   );

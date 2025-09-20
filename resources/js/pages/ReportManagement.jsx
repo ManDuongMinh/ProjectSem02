@@ -1,10 +1,11 @@
-import "../../css/UserManagement.css"; // dùng lại CSS container, table, btn...
+// src/pages/ReportManagement.jsx
+import "../../css/UserManagement.css"; // tái sử dụng CSS table, btn
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-export default function CourseManagement() {
-  const [courses, setCourses] = useState([]);
+export default function ReportManagement() {
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -12,22 +13,22 @@ export default function CourseManagement() {
   const [statusMap, setStatusMap] = useState({});
 
   useEffect(() => {
-    fetchCourses();
+    fetchReports();
   }, []);
 
-  const fetchCourses = async () => {
+  const fetchReports = async () => {
     try {
-      const res = await axios.get("http://127.0.0.1:8000/api/courses");
-      setCourses(res.data);
+      // Backend Laravel cần tạo API /api/reports
+      const res = await axios.get("http://127.0.0.1:8000/api/reports");
+      setReports(res.data);
 
-      // map trạng thái
       const map = {};
-      res.data.forEach((c) => {
-        map[c.CourseID] = c.CStatus || "Inactive";
+      res.data.forEach((r) => {
+        map[r.ReportID] = r.RStatus || "Pending";
       });
       setStatusMap(map);
     } catch (err) {
-      console.error("Error fetching courses:", err);
+      console.error("Error fetching reports:", err);
     } finally {
       setLoading(false);
     }
@@ -39,7 +40,7 @@ export default function CourseManagement() {
 
   const handleSave = async (id) => {
     const newStatus = statusMap[id];
-    const oldStatus = courses.find((c) => c.CourseID === id).CStatus;
+    const oldStatus = reports.find((r) => r.ReportID === id).RStatus;
 
     if (newStatus === oldStatus) {
       setMessage("No changes to save.");
@@ -47,28 +48,22 @@ export default function CourseManagement() {
       return;
     }
 
-    if (
-      !window.confirm(
-        `Change course ${id} status from ${oldStatus} to ${newStatus}?`
-      )
-    ) {
+    if (!window.confirm(`Change report ${id} status from ${oldStatus} to ${newStatus}?`)) {
       setStatusMap((prev) => ({ ...prev, [id]: oldStatus }));
       return;
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/courses/${id}`, {
-        CStatus: newStatus,
+      await axios.put(`http://127.0.0.1:8000/api/reports/${id}`, {
+        RStatus: newStatus,
       });
 
-      setCourses((prev) =>
-        prev.map((c) =>
-          c.CourseID === id ? { ...c, CStatus: newStatus } : c
-        )
+      setReports((prev) =>
+        prev.map((r) => (r.ReportID === id ? { ...r, RStatus: newStatus } : r))
       );
-      setMessage("Course updated successfully!");
+      setMessage("Report updated successfully!");
     } catch (err) {
-      console.error("Error updating course:", err);
+      console.error("Error updating report:", err);
       setMessage("Update failed.");
     } finally {
       setTimeout(() => setMessage(""), 2500);
@@ -76,13 +71,13 @@ export default function CourseManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this course?")) return;
+    if (!window.confirm("Are you sure you want to delete this report?")) return;
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/courses/${id}`);
-      setCourses((prev) => prev.filter((c) => c.CourseID !== id));
-      setMessage("Course deleted successfully!");
+      await axios.delete(`http://127.0.0.1:8000/api/reports/${id}`);
+      setReports((prev) => prev.filter((r) => r.ReportID !== id));
+      setMessage("Report deleted successfully!");
     } catch (err) {
-      console.error("Error deleting course:", err);
+      console.error("Error deleting report:", err);
       setMessage("Delete failed.");
     } finally {
       setTimeout(() => setMessage(""), 2500);
@@ -91,62 +86,58 @@ export default function CourseManagement() {
 
   const indexOfLast = currentPage * rowsPerPage;
   const indexOfFirst = indexOfLast - rowsPerPage;
-  const currentCourses = courses.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(courses.length / rowsPerPage);
+  const currentReports = reports.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(reports.length / rowsPerPage);
 
-  if (loading) return <p style={{ textAlign: "center" }}>Loading courses...</p>;
+  if (loading) return <p style={{ textAlign: "center" }}>Loading reports...</p>;
 
   return (
     <div className="container">
-      <h1>Admin • Course Management</h1>
-      <Link to="/admin/courses/new" className="btn btn-primary">
-        Add New Course
-      </Link>
+      <h1>Admin • Report Management</h1>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
         <thead>
           <tr>
+            <th>Report ID</th>
+            <th>Account ID</th>
             <th>Course ID</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Start Date</th>
-            <th>Creator</th>
+            <th>Content</th>
+            <th>Mark</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {currentCourses.map((c) => (
-            <tr key={c.CourseID}>
-              <td>{c.CourseID}</td>
-              <td>{c.CName}</td>
-              <td>{c.CDescription}</td>
-              <td>{c.StartDate}</td>
-              <td>{c.CreatorID}</td>
+          {currentReports.map((r) => (
+            <tr key={r.ReportID}>
+              <td>{r.ReportID}</td>
+              <td>{r.AccountID}</td>
+              <td>{r.CourseID}</td>
+              <td>{r.Content}</td>
+              <td>{r.Mark}</td>
               <td>
                 <select
-                  value={statusMap[c.CourseID] || "Inactive"}
-                  onChange={(e) =>
-                    handleStatusChange(c.CourseID, e.target.value)
-                  }
+                  value={statusMap[r.ReportID] || "Pending"}
+                  onChange={(e) => handleStatusChange(r.ReportID, e.target.value)}
                 >
-                  <option>Active</option>
-                  <option>Inactive</option>
+                  <option>Passed</option>
+                  <option>Pending</option>
+                  <option>Failed</option>
                 </select>
               </td>
               <td>
                 <div className="action-buttons">
                   <button
                     className="btn btn-save"
-                    onClick={() => handleSave(c.CourseID)}
-                    disabled={statusMap[c.CourseID] === c.CStatus}
+                    onClick={() => handleSave(r.ReportID)}
+                    disabled={statusMap[r.ReportID] === r.RStatus}
                   >
                     Save
                   </button>
                   <button
                     className="btn btn-del"
-                    onClick={() => handleDelete(c.CourseID)}
+                    onClick={() => handleDelete(r.ReportID)}
                   >
                     Delete
                   </button>
@@ -186,7 +177,6 @@ export default function CourseManagement() {
         </button>
       </div>
 
-      {/* Back */}
       <div className="row">
         <Link to="/admin" className="btn-ghost">
           Back to HomePage
@@ -194,9 +184,8 @@ export default function CourseManagement() {
         <Link to="/admin/users" className="btn-ghost">
           Go to User Management
         </Link>
-
-        <Link to="/admin/reports" className="btn-ghost">
-          Go to Report Management
+        <Link to="/admin/courses" className="btn-ghost">
+          Go to Course Management
         </Link>
         <Link to="/admin/feedback" className="btn-ghost">
           Go to Feedback Management
