@@ -1,8 +1,7 @@
-// src/pages/ReportManagement.jsx
-import "../../css/UserManagement.css"; // tái sử dụng CSS table, btn
+import "../../css/UserManagement.css";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function ReportManagement() {
   const [reports, setReports] = useState([]);
@@ -11,6 +10,7 @@ export default function ReportManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [statusMap, setStatusMap] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchReports();
@@ -18,7 +18,6 @@ export default function ReportManagement() {
 
   const fetchReports = async () => {
     try {
-      // Backend Laravel cần tạo API /api/reports
       const res = await axios.get("http://127.0.0.1:8000/api/reports");
       setReports(res.data);
 
@@ -31,6 +30,20 @@ export default function ReportManagement() {
       console.error("Error fetching reports:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/logout", {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
     }
   };
 
@@ -54,10 +67,7 @@ export default function ReportManagement() {
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/reports/${id}`, {
-        RStatus: newStatus,
-      });
-
+      await axios.put(`http://127.0.0.1:8000/api/reports/${id}`, { RStatus: newStatus });
       setReports((prev) =>
         prev.map((r) => (r.ReportID === id ? { ...r, RStatus: newStatus } : r))
       );
@@ -93,7 +103,10 @@ export default function ReportManagement() {
 
   return (
     <div className="container">
-      <h1>Admin • Report Management</h1>
+      <div className="row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Admin • Report Management</h1>
+        <button onClick={handleLogout} className="btn btn-del">Logout</button>
+      </div>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
@@ -135,12 +148,7 @@ export default function ReportManagement() {
                   >
                     Save
                   </button>
-                  <button
-                    className="btn btn-del"
-                    onClick={() => handleDelete(r.ReportID)}
-                  >
-                    Delete
-                  </button>
+                  <button className="btn btn-del" onClick={() => handleDelete(r.ReportID)}>Delete</button>
                 </div>
               </td>
             </tr>
@@ -150,46 +158,21 @@ export default function ReportManagement() {
 
       {/* Pagination */}
       <div className="row">
-        <button
-          className="btn-ghost"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-        >
-          Prev
-        </button>
-
+        <button className="btn-ghost" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Prev</button>
         {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            className={`btn-ghost ${currentPage === i + 1 ? "active" : ""}`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
+          <button key={i + 1} className={`btn-ghost ${currentPage === i + 1 ? "active" : ""}`} onClick={() => setCurrentPage(i + 1)}>
             {i + 1}
           </button>
         ))}
-
-        <button
-          className="btn-ghost"
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-        >
-          Next
-        </button>
+        <button className="btn-ghost" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</button>
       </div>
 
+      {/* Links */}
       <div className="row">
-        <Link to="/admin" className="btn-ghost">
-          Back to HomePage
-        </Link>
-        <Link to="/admin/users" className="btn-ghost">
-          Go to User Management
-        </Link>
-        <Link to="/admin/courses" className="btn-ghost">
-          Go to Course Management
-        </Link>
-        <Link to="/admin/feedback" className="btn-ghost">
-          Go to Feedback Management
-        </Link>
+        <Link to="/admin" className="btn-ghost">Back to HomePage</Link>
+        <Link to="/admin/users" className="btn-ghost">Go to User Management</Link>
+        <Link to="/admin/courses" className="btn-ghost">Go to Course Management</Link>
+        <Link to="/admin/feedback" className="btn-ghost">Go to Feedback Management</Link>
       </div>
     </div>
   );

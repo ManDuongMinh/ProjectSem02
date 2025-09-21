@@ -111,7 +111,7 @@ export default function UserManagement() {
     <div className="container">
       <div className="row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1>Admin • User Management</h1>
-        <button onClick={handleLogout} className="btn-ghost">Logout</button>
+        <button onClick={handleLogout} className="btn btn-del">Logout</button>
       </div>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 

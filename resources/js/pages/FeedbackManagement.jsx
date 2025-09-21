@@ -1,8 +1,7 @@
-// src/pages/FeedbackManagement.jsx
-import "../../css/UserManagement.css"; // dùng lại CSS table, btn
+import "../../css/UserManagement.css";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function FeedbackManagement() {
   const [feedbacks, setFeedbacks] = useState([]);
@@ -11,6 +10,7 @@ export default function FeedbackManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [statusMap, setStatusMap] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchFeedbacks();
@@ -30,6 +30,20 @@ export default function FeedbackManagement() {
       console.error("Error fetching feedback:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/logout", {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
     }
   };
 
@@ -53,10 +67,7 @@ export default function FeedbackManagement() {
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/feedback/${id}`, {
-        FStatus: newStatus,
-      });
-
+      await axios.put(`http://127.0.0.1:8000/api/feedback/${id}`, { FStatus: newStatus });
       setFeedbacks((prev) =>
         prev.map((f) => (f.FeedbackID === id ? { ...f, FStatus: newStatus } : f))
       );
@@ -92,7 +103,10 @@ export default function FeedbackManagement() {
 
   return (
     <div className="container">
-      <h1>Admin • Feedback Management</h1>
+      <div className="row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Admin • Feedback Management</h1>
+        <button onClick={handleLogout} className="btn btn-del">Logout</button>
+      </div>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
@@ -131,12 +145,7 @@ export default function FeedbackManagement() {
                   >
                     Save
                   </button>
-                  <button
-                    className="btn btn-del"
-                    onClick={() => handleDelete(f.FeedbackID)}
-                  >
-                    Delete
-                  </button>
+                  <button className="btn btn-del" onClick={() => handleDelete(f.FeedbackID)}>Delete</button>
                 </div>
               </td>
             </tr>
@@ -146,48 +155,21 @@ export default function FeedbackManagement() {
 
       {/* Pagination */}
       <div className="row">
-        <button
-          className="btn-ghost"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-        >
-          Prev
-        </button>
-
+        <button className="btn-ghost" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Prev</button>
         {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            className={`btn-ghost ${currentPage === i + 1 ? "active" : ""}`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
+          <button key={i + 1} className={`btn-ghost ${currentPage === i + 1 ? "active" : ""}`} onClick={() => setCurrentPage(i + 1)}>
             {i + 1}
           </button>
         ))}
-
-        <button
-          className="btn-ghost"
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-        >
-          Next
-        </button>
+        <button className="btn-ghost" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</button>
       </div>
 
-      {/* Back */}
+      {/* Links */}
       <div className="row">
-       <Link to="/admin" className="btn-ghost">
-           Back to HomePage
-         </Link>
-         <Link to="/admin/users" className="btn-ghost">
-           Go to User Management
-         </Link>
-         <Link to="/admin/courses" className="btn-ghost">
-           Go to Course Management
-         </Link>
-         <Link to="/admin/reports" className="btn-ghost">
-           Go to Report Management
-         </Link>
-         
+        <Link to="/admin" className="btn-ghost">Back to HomePage</Link>
+        <Link to="/admin/users" className="btn-ghost">Go to User Management</Link>
+        <Link to="/admin/courses" className="btn-ghost">Go to Course Management</Link>
+        <Link to="/admin/reports" className="btn-ghost">Go to Report Management</Link>
       </div>
     </div>
   );

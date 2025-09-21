@@ -36,8 +36,8 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         {/* Logo / Title */}
-        <h1 className="login-title">E-Learning Admin Login</h1>
-        <p className="login-subtitle">Sign in to manage courses and users</p>
+        <h1 className="login-title">E-Learning Login</h1>
+        <p className="login-subtitle">Sign in to learn new courses updating every day</p>
 
         {/* Error message */}
         {message && <p className="login-message">{message}</p>}

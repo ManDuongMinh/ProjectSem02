@@ -1,7 +1,7 @@
 import "../../css/UserManagement.css"; // dùng lại CSS container, table, btn...
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function CourseManagement() {
   const [courses, setCourses] = useState([]);
@@ -10,6 +10,7 @@ export default function CourseManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(5);
   const [statusMap, setStatusMap] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
@@ -20,7 +21,6 @@ export default function CourseManagement() {
       const res = await axios.get("http://127.0.0.1:8000/api/courses");
       setCourses(res.data);
 
-      // map trạng thái
       const map = {};
       res.data.forEach((c) => {
         map[c.CourseID] = c.CStatus || "Inactive";
@@ -30,6 +30,20 @@ export default function CourseManagement() {
       console.error("Error fetching courses:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/logout", {}, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/login");
     }
   };
 
@@ -47,24 +61,15 @@ export default function CourseManagement() {
       return;
     }
 
-    if (
-      !window.confirm(
-        `Change course ${id} status from ${oldStatus} to ${newStatus}?`
-      )
-    ) {
+    if (!window.confirm(`Change course ${id} status from ${oldStatus} to ${newStatus}?`)) {
       setStatusMap((prev) => ({ ...prev, [id]: oldStatus }));
       return;
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/courses/${id}`, {
-        CStatus: newStatus,
-      });
-
+      await axios.put(`http://127.0.0.1:8000/api/courses/${id}`, { CStatus: newStatus });
       setCourses((prev) =>
-        prev.map((c) =>
-          c.CourseID === id ? { ...c, CStatus: newStatus } : c
-        )
+        prev.map((c) => (c.CourseID === id ? { ...c, CStatus: newStatus } : c))
       );
       setMessage("Course updated successfully!");
     } catch (err) {
@@ -98,10 +103,11 @@ export default function CourseManagement() {
 
   return (
     <div className="container">
-      <h1>Admin • Course Management</h1>
-      <Link to="/admin/courses/new" className="btn btn-primary">
-        Add New Course
-      </Link>
+      <div className="row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Admin • Course Management</h1>
+        <button onClick={handleLogout} className="btn btn-del">Logout</button>
+      </div>
+      <Link to="/admin/courses/new" className="btn btn-primary">Add New Course</Link>
       {message && <p style={{ color: "lightgreen" }}>{message}</p>}
 
       <table>
@@ -127,9 +133,7 @@ export default function CourseManagement() {
               <td>
                 <select
                   value={statusMap[c.CourseID] || "Inactive"}
-                  onChange={(e) =>
-                    handleStatusChange(c.CourseID, e.target.value)
-                  }
+                  onChange={(e) => handleStatusChange(c.CourseID, e.target.value)}
                 >
                   <option>Active</option>
                   <option>Inactive</option>
@@ -144,12 +148,7 @@ export default function CourseManagement() {
                   >
                     Save
                   </button>
-                  <button
-                    className="btn btn-del"
-                    onClick={() => handleDelete(c.CourseID)}
-                  >
-                    Delete
-                  </button>
+                  <button className="btn btn-del" onClick={() => handleDelete(c.CourseID)}>Delete</button>
                 </div>
               </td>
             </tr>
@@ -159,48 +158,21 @@ export default function CourseManagement() {
 
       {/* Pagination */}
       <div className="row">
-        <button
-          className="btn-ghost"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((p) => p - 1)}
-        >
-          Prev
-        </button>
-
+        <button className="btn-ghost" disabled={currentPage === 1} onClick={() => setCurrentPage((p) => p - 1)}>Prev</button>
         {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            className={`btn-ghost ${currentPage === i + 1 ? "active" : ""}`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
+          <button key={i + 1} className={`btn-ghost ${currentPage === i + 1 ? "active" : ""}`} onClick={() => setCurrentPage(i + 1)}>
             {i + 1}
           </button>
         ))}
-
-        <button
-          className="btn-ghost"
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((p) => p + 1)}
-        >
-          Next
-        </button>
+        <button className="btn-ghost" disabled={currentPage === totalPages} onClick={() => setCurrentPage((p) => p + 1)}>Next</button>
       </div>
 
-      {/* Back */}
+      {/* Links */}
       <div className="row">
-        <Link to="/admin" className="btn-ghost">
-          Back to HomePage
-        </Link>
-        <Link to="/admin/users" className="btn-ghost">
-          Go to User Management
-        </Link>
-
-        <Link to="/admin/reports" className="btn-ghost">
-          Go to Report Management
-        </Link>
-        <Link to="/admin/feedback" className="btn-ghost">
-          Go to Feedback Management
-        </Link>
+        <Link to="/admin" className="btn-ghost">Back to HomePage</Link>
+        <Link to="/admin/users" className="btn-ghost">Go to User Management</Link>
+        <Link to="/admin/reports" className="btn-ghost">Go to Report Management</Link>
+        <Link to="/admin/feedback" className="btn-ghost">Go to Feedback Management</Link>
       </div>
     </div>
   );
