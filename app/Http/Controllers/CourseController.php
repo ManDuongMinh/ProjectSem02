@@ -53,19 +53,23 @@ class CourseController extends Controller
 
 public function update(Request $request, $id)
 {
-    $validated = $request->validate([
-        'CName' => 'required|string|max:255',
-        'CDescription' => 'nullable|string',
-    ]);
+    $course = Course::find($id);
 
-    $affected = DB::table('courses')
-        ->where('CourseID', $id)
-        ->update($validated);
-
-    if ($affected) {
-        return response()->json(['message' => 'Course updated successfully']);
+    if (!$course) {
+        return response()->json(['error' => 'Course not found'], 404);
     }
-    return response()->json(['message' => 'Course not found or unchanged'], 404);
+
+    // chỉ cập nhật nếu có CStatus
+    if ($request->has('CStatus')) {
+        $course->CStatus = $request->input('CStatus');
+    }
+
+    $course->save();
+
+    return response()->json([
+        'message' => 'Course updated successfully',
+        'course' => $course
+    ]);
 }
 
 

@@ -1,5 +1,5 @@
 // src/pages/NewCourse.jsx
-import "../../css/NewCourse.css"; // CSS riêng cho form thêm khóa học
+import "../../css/NewCourse.css";
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
@@ -28,34 +28,48 @@ export default function NewCourse() {
   };
 
   return (
-    <div className="form-card">
-      <h1>Add New Course</h1>
-      {message && <p style={{ textAlign: "center", color: "lightgreen" }}>{message}</p>}
+    <div className="form-container">
+      <div className="form-glass">
+        <h1>Add New Course</h1>
+        {message && (
+          <p
+            className={`message ${
+              message.includes("✅") ? "success" : "error"
+            }`}
+          >
+            {message}
+          </p>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Course Name</label>
-          <input
-            type="text"
-            value={CName}
-            onChange={(e) => setCName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Description</label>
-          <textarea
-            rows="4"
-            value={CDescription}
-            onChange={(e) => setCDescription(e.target.value)}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Course Name</label>
+            <input
+              type="text"
+              value={CName}
+              onChange={(e) => setCName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Description</label>
+            <textarea
+              rows="4"
+              value={CDescription}
+              onChange={(e) => setCDescription(e.target.value)}
+            />
+          </div>
 
-        <div className="btn-group">
-          <button type="submit" className="btn btn-primary">Save</button>
-          <Link to="/admin/courses" className="btn-ghost">Cancel</Link>
-        </div>
-      </form>
+          <div className="btn-group">
+            <button type="submit" className="btn btn-primary">
+              Save
+            </button>
+            <Link to="/admin/courses" className="btn-ghost">
+              Cancel
+            </Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

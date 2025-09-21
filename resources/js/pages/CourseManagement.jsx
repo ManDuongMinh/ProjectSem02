@@ -67,15 +67,23 @@ export default function CourseManagement() {
     }
 
     try {
-      await axios.put(`http://127.0.0.1:8000/api/courses/${id}`, { CStatus: newStatus });
-      setCourses((prev) =>
-        prev.map((c) => (c.CourseID === id ? { ...c, CStatus: newStatus } : c))
-      );
-      setMessage("Course updated successfully!");
-    } catch (err) {
-      console.error("Error updating course:", err);
-      setMessage("Update failed.");
-    } finally {
+  await axios.put(
+    `http://127.0.0.1:8000/api/courses/${id}`,
+    { CStatus: newStatus },
+    { headers: { "Content-Type": "application/json" } }
+  );
+
+  setCourses((prev) =>
+    prev.map((c) =>
+      c.CourseID === id ? { ...c, CStatus: newStatus } : c
+    )
+  );
+  setMessage("Course updated successfully!");
+} catch (err) {
+  console.error("Error updating course:", err);
+  setMessage("Update failed.");
+}
+ finally {
       setTimeout(() => setMessage(""), 2500);
     }
   };
